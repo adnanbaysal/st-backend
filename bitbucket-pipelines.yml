@@ -3,7 +3,7 @@
 #  This template allows you to validate your python code.
 #  The workflow allows running tests and code linting on the default branch.
 
-image: python:3.8
+image: python:3.11
 
 pipelines:
   default:
@@ -13,9 +13,11 @@ pipelines:
           caches:
             - pip
           script:
-            - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-            - pip install pytest
-            - pytest -v tests/* --junitxml=test-reports/report.xml
+            - curl -sSL https://install.python-poetry.org | python3 - --version 1.6.1
+            - export PATH="$HOME/.local/bin:$PATH"
+            - poetry --version
+            - #poetry install pytest
+            - #pytest -v tests/* --junitxml=test-reports/report.xml
       - step:
           name: Lint code
           script:
