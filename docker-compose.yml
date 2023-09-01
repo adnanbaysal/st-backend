@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  api:
+    build: .
+    command: >
+      sh -c "cd social_text &&
+             poetry run python manage.py makemigrations &&
+             poetry run python manage.py migrate &&
+             poetry run python manage.py collectstatic --no-input &&
+             poetry run gunicorn social_text.asgi:application -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000"
+# comment out the above line and uncomment the below line to run locally in development mode
+#            uvicorn social_text.asgi:application --host 0.0.0.0 --reload"
+    volumes:
+      - .:/app:z
+      - static_files:/app/social_text/static
+    expose:
+      - 8000
+    environment:
+      # ideally, SECRET_KEY should be read from environment.
+      - SECRET_KEY="django-insecure-_*t_gft-3&lxso*gnoumft+el%3=i4*29fl3vp3ga*yoxl+7eb"
+
+  nginx:
+    build: ./nginx
+    ports:
+      - 1337:80
+    depends_on:
+      - api
+    volumes:
+      - static_files:/app/social_text/static
+
+volumes:
+  static_files:

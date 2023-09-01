@@ -40,7 +40,13 @@ curl -sSL https://install.python-poetry.org | python3 - --version 1.6.1
 * Installing dependencies: `poetry install`. You can skip this if you already run it in the previous step.
 
 ## Running the backend and services locally ##
-You need to install [Docker](https://www.docker.com/) to run services easily and smoothly.
+You need to install [Docker](https://www.docker.com/) to run services easily and smoothly. To run the backend with all
+required services (Django and nginx now, PostgreSQL in the future), run the following command:
+
+```docker-compose up -d --build```
+
+`-d` option runs the services in detached mode. You can omit `--build` if you did not make any change in the code after
+the last build.
 
 ## Running tests ##
 The project uses [pytest](https://docs.pytest.org/) to implement and run unit tests.
