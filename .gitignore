@@ -49,3 +49,5 @@ Thumbs.db
 *.wmv
 
 *db.sqlite3
+
+.env

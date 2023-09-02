@@ -41,7 +41,19 @@ curl -sSL https://install.python-poetry.org | python3 - --version 1.6.1
 
 ## Running the backend and services locally ##
 You need to install [Docker](https://www.docker.com/) to run services easily and smoothly. To run the backend with all
-required services (Django and nginx now, PostgreSQL in the future), run the following command:
+required services, first create a file named `.env` in the root directory of the repository with the following content:
+
+```
+DATABASE=postgres
+DJANGO_SECRET_KEY=django-insecure-key
+POSTGRES_DB=postgres
+POSTGRES_HOST=db
+POSTGRES_PASSWORD=postgres
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres
+```
+
+You can set the value of `DJANGO_SECRET_KEY` to any random string of characters. Then, run the following command:
 
 ```docker-compose up -d --build```
 

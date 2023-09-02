@@ -1,6 +1,19 @@
 version: "3.8"
 
 services:
+  db:
+    image: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_USER=${POSTGRES_USER}
+    ports:
+      - "5432:5432"
+
   api:
     build: .
     command: >
@@ -9,21 +22,23 @@ services:
              poetry run python manage.py migrate &&
              poetry run python manage.py collectstatic --no-input &&
              poetry run gunicorn social_text.asgi:application -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000"
-# comment out the above line and uncomment the below line to run locally in development mode
-#            uvicorn social_text.asgi:application --host 0.0.0.0 --reload"
     volumes:
       - .:/app:z
       - static_files:/app/social_text/static
     expose:
       - 8000
     environment:
-      # ideally, SECRET_KEY should be read from environment.
-      - SECRET_KEY="django-insecure-_*t_gft-3&lxso*gnoumft+el%3=i4*29fl3vp3ga*yoxl+7eb"
+      - SECRET_KEY=${DJANGO_SECRET_KEY}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_USER=${POSTGRES_USER}
 
   nginx:
     build: ./nginx
     ports:
-      - 1337:80
+      - "1337:80"
     depends_on:
       - api
     volumes:
@@ -31,3 +46,4 @@ services:
 
 volumes:
   static_files:
+  postgres_data:
