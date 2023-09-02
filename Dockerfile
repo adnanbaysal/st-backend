@@ -27,4 +27,6 @@ COPY ./entrypoint.sh .
 RUN sed -i 's/\r$//g' /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
+RUN adduser --disabled-password --gecos '' myuser
+
 ENTRYPOINT ["/app/entrypoint.sh"]

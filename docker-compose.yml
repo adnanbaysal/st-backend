@@ -44,6 +44,40 @@ services:
     volumes:
       - static_files:/app/social_text/static
 
+  rabbit:
+    hostname: rabbit
+    image: rabbitmq:3.12-management-alpine
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  redis:
+    image: redis:7.2-alpine
+    hostname: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: >
+      sh -c "cd social_text &&
+             su -m myuser -c  \"celery -A social_text worker -l INFO\""
+    volumes:
+      - .:/app:Z
+    links:
+      - rabbit
+      - redis
+    depends_on:
+      - rabbit
+
 volumes:
   static_files:
   postgres_data:
+  redis_data:
