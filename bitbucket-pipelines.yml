@@ -15,7 +15,8 @@ pipelines:
           script:
             - curl -sSL https://install.python-poetry.org | python3 - --version 1.6.1
             - export PATH="$HOME/.local/bin:$PATH"
-            - poetry --version
+            - poetry install
+            - poetry run pytest tests/unit --cov func --cov-branch --cov-report term-missing
       - step:
           name: Lint code
           script:

@@ -83,11 +83,25 @@ You can connect to the postgresql server with your favorite DB tool using the lo
 ## Running tests ##
 The project uses [pytest](https://docs.pytest.org/) to implement and run unit tests.
 
+To run all unit tests with code coverage, run this command from repository root:
+
+```
+poetry run pytest tests/unit --cov func --cov-branch --cov-report term-missing
+```
+
 ## Contributing ##
-You need to install [`pre-commit`](https://pre-commit.com/) to install git hooks that will run the unit tests
-automatically before pushing changes to the origin.
+You need to install [`pre-commit`](https://pre-commit.com/) to install git pre-commit hooks that will run the linting
+related stuff automatically before committing.
 After installing `pre-commit`, cd into the repository root and execute:
 
 ```pre-commit install```
 
 which will install the hooks to your local machine.
+
+To run unit tests before pushing changes to the remote repository, call this command once:
+
+```
+cp .pre-push.hook .git/hooks/pre-push
+```
+
+After that, unit tests will run whenever you try to push changes. The changes will be pushed only if the tests pass.
