@@ -122,3 +122,10 @@ cp .pre-push.hook .git/hooks/pre-push
 ```
 
 After that, unit tests will run whenever you try to push changes. The changes will be pushed only if the tests pass.
+
+### Updating the OpenAPI schema ###
+Whenever there is a change in API specs, the OpenAPI schema can be updated with the following command in the
+`social_text` directory under the root repository directory:
+```
+./manage.py spectacular --color --file schema.yml
+```
