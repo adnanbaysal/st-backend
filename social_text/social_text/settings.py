@@ -35,12 +35,18 @@ CSRF_TRUSTED_ORIGINS = ["http://localhost:1337"]
 # Application definition
 
 INSTALLED_APPS = [
+    # default django apps
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # 3rd party apps
+    "rest_framework",
+    "drf_spectacular",
+    # project apps
+    "auth",
 ]
 
 MIDDLEWARE = [
@@ -135,3 +141,20 @@ CELERY_BROKER_URL = os.environ.get(
     "CELERY_BROKER_URL", "amqp://admin:mypass@rabbit:5672"
 )
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER_URL", "redis://redis:6379")
+
+REST_FRAMEWORK = {
+    "DEFAULT_PERMISSION_CLASSES": [],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "SocialText API Specification",
+    "DESCRIPTION": "SocialText is a text based social media app.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}

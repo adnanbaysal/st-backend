@@ -49,7 +49,7 @@ CELERY_RESULT_BACKEND=redis://redis:6379
 DATABASE=postgres
 DJANGO_SECRET_KEY=django-insecure-key
 POSTGRES_DB=postgres
-POSTGRES_HOST=db
+POSTGRES_HOST=localhost
 POSTGRES_PASSWORD=postgres
 POSTGRES_PORT=5432
 POSTGRES_USER=postgres
@@ -57,18 +57,27 @@ RABBITMQ_DEFAULT_USER=admin
 RABBITMQ_DEFAULT_PASS=mypass
 ```
 
-You can set the value of `DJANGO_SECRET_KEY` to any random string of characters. Then, run the following command:
+You can set the value of `DJANGO_SECRET_KEY` to any random string of characters. Then, run the following command to run
+all services including the API:
 
-```docker-compose up -d --build```
+```docker-compose --profile runserver up -d --build```
 
 `-d` option runs the services in detached mode. You can omit `--build` if you did not make any change in the code after
-the last build.
+the last build. If the option `--profile runserver` is omitted, only DB, RabbitMQ, Redis and Celery worker services run.
+This can be used, for example, to run the server in debug mode.
+
+
 
 ## Accessing the Services ##
 
 ### Django ###
-Base url for Django backend (API) is http://localhost:1337.
+When running the API with `--profile runserver`, the port for the API is 1337. If the API is run with
+`./manage.py runserver`, the default port is 8000, but it can be changed with the `--port` option of `manage.py`.
+For the following, the port is assumed to be 1337. Under this assumption, the base url for Django backend (API) is
+http://localhost:1337.
+
 * For Django Admin UI, go to http://localhost:1337/admin
+* For swagger API documentation (uses openAPI 3.0), go to: http://localhost:1337/api/schema/swagger-ui
 
 ### RabbitMQ Management UI ###
 In a browser, go to http://localhost:15672/ and login with `RABBITMQ_DEFAULT_USER` and `RABBITMQ_DEFAULT_PASS` defined
