@@ -28,6 +28,7 @@ services:
     expose:
       - 8000
     environment:
+      - DJANGO_ROOT_URLCONF=${DJANGO_ROOT_URLCONF}
       - SECRET_KEY=${DJANGO_SECRET_KEY}
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_HOST=db
@@ -80,6 +81,8 @@ services:
       - redis
     depends_on:
       - rabbit
+    environment:
+      - DJANGO_ROOT_URLCONF=${DJANGO_ROOT_URLCONF}
 
 volumes:
   static_files:

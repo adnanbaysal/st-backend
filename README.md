@@ -47,6 +47,7 @@ required services, first create a file named `.env` in the root directory of the
 CELERY_BROKER_URL=amqp://admin:mypass@rabbit:5672
 CELERY_RESULT_BACKEND=redis://redis:6379
 DATABASE=postgres
+DJANGO_ROOT_URLCONF=social_text.urls
 DJANGO_SECRET_KEY=django-insecure-key
 POSTGRES_DB=postgres
 POSTGRES_HOST=localhost
@@ -92,11 +93,18 @@ You can connect to the postgresql server with your favorite DB tool using the lo
 ## Running tests ##
 The project uses [pytest](https://docs.pytest.org/) to implement and run unit tests.
 
-To run all unit tests with code coverage, run this command from repository root:
+To run all unit tests:
 
-```
-poetry run pytest tests/unit --cov func --cov-branch --cov-report term-missing
-```
+1. Run the docker services with:
+    ```
+    docker-compose up -d
+    ```
+   The `runserver` profile is not necessary for the tests.
+2. Then, run this command from repository root:
+    ```
+    poetry run pytest --cov
+    ```
+   If the poetry environment is already activated, leading `poetry run can be omitted.
 
 ## Contributing ##
 You need to install [`pre-commit`](https://pre-commit.com/) to install git pre-commit hooks that will run the linting

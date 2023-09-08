@@ -59,7 +59,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "social_text.urls"
+ROOT_URLCONF = os.environ.get("DJANGO_ROOT_URLCONF")
 
 TEMPLATES = [
     {

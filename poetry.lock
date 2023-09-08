@@ -809,6 +809,23 @@ docs = ["sphinx", "sphinx-rtd-theme"]
 testing = ["Django", "django-configurations (>=2.0)"]
 
 [[package]]
+name = "pytest-env"
+version = "1.0.1"
+description = "py.test plugin that allows you to add environment variables."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pytest_env-1.0.1-py3-none-any.whl", hash = "sha256:e8faf927c6fcdbbc8fe3317506acc116713c9708d01652a0fd945f9ae27b71aa"},
+    {file = "pytest_env-1.0.1.tar.gz", hash = "sha256:603fe216e8e03a5d134989cb41317c59aabef013d2250c71b864ab0798fbe6f6"},
+]
+
+[package.dependencies]
+pytest = ">=7.3.1"
+
+[package.extras]
+test = ["coverage (>=7.2.7)", "pytest-mock (>=3.10)"]
+
+[[package]]
 name = "python-dateutil"
 version = "2.8.2"
 description = "Extensions to the standard Python datetime module"
@@ -1137,4 +1154,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "001533688d68269e006e4e17f1cb5487996b65d1abddadb666821c136d30514d"
+content-hash = "524fccb02105c9f39980f8940df83aedbf06e506db3c88ef4da3c30bf2b00b5a"

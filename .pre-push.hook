@@ -11,7 +11,7 @@ validate() {
     pushd "$(git rev-parse --show-toplevel)" &> /dev/null
 
     info "Running unit tests"
-    if ! poetry run pytest --cov func --cov-branch --cov-report term-missing; then
+    if ! poetry run pytest --cov; then
         error "Unit tests failing"
         ((errors++))
     fi
