@@ -31,7 +31,9 @@ paths:
                 $ref: '#/components/schemas/TokenResponse'
           description: ''
         '400':
-          description: '{"error": "user_already_exists"}'
+          description: Bad request
+        '502':
+          description: Bad gateway
 components:
   schemas:
     SignUp:

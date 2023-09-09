@@ -11,6 +11,8 @@ pipelines:
           script:
             - curl -sSL https://install.python-poetry.org | python3 - --version 1.6.1
             - export PATH="$HOME/.local/bin:$PATH"
+            - export ABSTRACT_API_EMAIL_URL=$ABSTRACT_API_EMAIL_URL
+            - export ABSTRACT_API_EMAIL_KEY=$ABSTRACT_API_EMAIL_KEY
             - export CELERY_BROKER_URL=$CELERY_BROKER_URL
             - export CELERY_RESULT_BACKEND=$CELERY_RESULT_BACKEND
             - export DATABASE=$DATABASE
@@ -28,7 +30,7 @@ pipelines:
                 -e POSTGRES_DB=$POSTGRES_DB -e POSTGRES_HOST=$POSTGRES_HOST -e POSTGRES_PORT=$POSTGRES_PORT \
                 -e POSTGRES_USER=$POSTGRES_USER -d postgres
             - poetry install
-            - poetry run pytest --cov
+            - poetry run pytest --ignore tests --cov
           services:
             - docker
       - step:

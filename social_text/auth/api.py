@@ -12,20 +12,19 @@ from .serializers import SignUpSerializer, TokenResponseSerializer
     request=SignUpSerializer,
     responses={
         status.HTTP_200_OK: TokenResponseSerializer,
-        status.HTTP_400_BAD_REQUEST: OpenApiResponse(
-            description='{"error": "user_already_exists"}'
-        ),
+        status.HTTP_400_BAD_REQUEST: OpenApiResponse(description="Bad request"),
+        status.HTTP_502_BAD_GATEWAY: OpenApiResponse(description="Bad gateway"),
     },
 )
 @api_view(["POST"])
 def signup(request):
-    serializer = SignUpSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-
     if User.objects.filter(username=request.data.get("email")).exists():
         return Response(
             {"error": "user_already_exists"}, status=status.HTTP_400_BAD_REQUEST
         )
+
+    serializer = SignUpSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
 
     user = serializer.save()
     tokens = get_tokens_for_user(user)

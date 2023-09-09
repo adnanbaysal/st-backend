@@ -12,7 +12,21 @@ services:
       - POSTGRES_PORT=${POSTGRES_PORT}
       - POSTGRES_USER=${POSTGRES_USER}
     ports:
-      - "5432:5432"
+      - ${POSTGRES_PORT}:5432
+
+  db-test:
+    image: postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_PORT_TEST=${POSTGRES_PORT_TEST}
+      - POSTGRES_USER=${POSTGRES_USER}
+    ports:
+      - ${POSTGRES_PORT_TEST}:5432
+    expose:
+      - ${POSTGRES_PORT_TEST}
+    profiles:
+      - test
 
   api:
     build: .
@@ -28,15 +42,18 @@ services:
     expose:
       - 8000
     environment:
+      - ABSTRACT_API_EMAIL_URL=${ABSTRACT_API_EMAIL_URL}
+      - ABSTRACT_API_EMAIL_KEY=${ABSTRACT_API_EMAIL_KEY}
       - DJANGO_ROOT_URLCONF=${DJANGO_ROOT_URLCONF}
       - SECRET_KEY=${DJANGO_SECRET_KEY}
       - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_HOST=db
+      - POSTGRES_HOST=${POSTGRES_HOST_DOCKER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_PORT=${POSTGRES_PORT}
       - POSTGRES_USER=${POSTGRES_USER}
     profiles:
       - runserver
+      - test
 
   nginx:
     build: ./nginx
@@ -48,6 +65,7 @@ services:
       - static_files:/app/social_text/static
     profiles:
       - runserver
+      - test
 
   rabbit:
     hostname: rabbit

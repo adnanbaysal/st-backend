@@ -1,11 +1,18 @@
 from http import HTTPStatus
+from http.client import HTTPException
+from unittest.mock import patch
 
 import pytest
-from django.contrib.auth.models import User
+from django.conf import settings
+from django.contrib.auth.models import AnonymousUser, User
 from django.db.utils import IntegrityError
-from django.test import TestCase
+from django.test import RequestFactory
 from django.urls import reverse
+from rest_framework import serializers
+from rest_framework.exceptions import ErrorDetail
 
+from .abstractapi_helper import validate_email
+from .api import signup
 from .jwt_helper import get_tokens_for_user
 from .serializers import SignUpSerializer
 
@@ -34,21 +41,111 @@ class TestGetTokensForUser:
             _ = get_tokens_for_user(non_user)
 
 
+@patch("social_text.auth.abstractapi_helper.requests")
+class TestValidateEmail:
+    def test_validation_succeeds(self, requests_mock):
+        email = "fredymercury@gmail.com"
+        requests_mock.get.return_value.json.return_value = {
+            "email": "fredymercury@gmail.com",
+            "autocorrect": "",
+            "deliverability": "DELIVERABLE",
+            "quality_score": "0.95",
+            "is_valid_format": {"value": True, "text": "TRUE"},
+        }
+        url = f"{settings.ABSTRACT_API_EMAIL_URL}?api_key={settings.ABSTRACT_API_EMAIL_KEY}&email={email}"
+
+        result = validate_email(email)
+        requests_mock.get.assert_called_once_with(url)
+        assert result == {"success": email}
+
+    def test_request_raises_exception(self, requests_mock):
+        email = "fredymercury@gmail.com"
+        error_message = "500: API call failed"
+        requests_mock.get.side_effect = HTTPException(error_message)
+        with pytest.raises(serializers.ValidationError) as error:
+            _ = validate_email(email)
+
+        assert error.value.detail == {
+            "validation_error": f"Gateway call `GET {settings.ABSTRACT_API_EMAIL_URL}` failed: {error_message}"
+        }
+
+    def test_response_data_invalid(self, requests_mock):
+        email = "fredymercury@gmail.com"
+        return_dict = {
+            "email": "fredymercury@gmail.com",
+            "autocorrect": "",
+            "deliverability": "DELIVERABLE",
+            "quality_score": "0.95",
+            "is_valid_format": {},
+        }
+        requests_mock.get.return_value.json.return_value = return_dict
+
+        with pytest.raises(serializers.ValidationError) as error:
+            _ = validate_email(email)
+
+        assert error.value.detail == {
+            "validation_error": f"Bad response from gateway {settings.ABSTRACT_API_EMAIL_URL}:\n{return_dict}"
+        }
+
+    def test_invalid_email_format(self, requests_mock):
+        email = "fredymercury"
+        requests_mock.get.return_value.json.return_value = {
+            "email": "fredymercury",
+            "autocorrect": "",
+            "deliverability": "UNDELIVERABLE",
+            "quality_score": "0.00",
+            "is_valid_format": {"value": False, "text": "TRUE"},
+        }
+
+        result = validate_email(email)
+        assert result == {"validation_error": "invalid_email_format"}
+
+    def test_auto_correct_suggested(self, requests_mock):
+        email = "fredymercury@gmal.com"
+        requests_mock.get.return_value.json.return_value = {
+            "email": "fredymercury@gmal.com",
+            "autocorrect": "fredymercury@gmail.com",
+            "deliverability": "UNDELIVERABLE",
+            "quality_score": "0.00",
+            "is_valid_format": {"value": True, "text": "TRUE"},
+        }
+
+        result = validate_email(email)
+        assert result == {"did_you_mean": "fredymercury@gmail.com"}
+
+    def test_unusable_email(self, requests_mock):
+        email = "fredymercury@gmail.com"
+        requests_mock.get.return_value.json.return_value = {
+            "email": "fredymercury@gmail.com",
+            "autocorrect": "",
+            "deliverability": "UNDELIVERABLE",
+            "quality_score": "0.00",
+            "is_valid_format": {"value": True, "text": "TRUE"},
+        }
+
+        result = validate_email(email)
+        assert result == {"validation_error": "unusable_email"}
+
+
 @pytest.mark.django_db
+@patch(
+    "social_text.auth.serializers.validate_email_with_api",
+    return_value={"success": "user1@domain.com"},
+)
 class TestSignUpSerializer:
-    def test_new_user(self):
+    def test_new_user(self, validate_email_mock):
         serializer = SignUpSerializer(
-            data={"email": "email@domain.com", "password": "password"}
+            data={"email": "user1@domain.com", "password": "password"}
         )
 
         assert serializer.is_valid()
 
         user = serializer.save()
-        assert user.username == "email@domain.com"
+        assert user.username == "user1@domain.com"
 
-    def test_existing_user(self, db_user_1):
+    def test_existing_user(self, validate_email_mock, db_user_1):
         serializer = SignUpSerializer(
-            data={"email": "user1@domain.com", "password": "password2"}
+            data={"email": "user1@domain.com", "password": "password"}
         )
 
         assert serializer.is_valid()
@@ -58,25 +155,54 @@ class TestSignUpSerializer:
 
 
 @pytest.mark.django_db
-class TestSignupView(TestCase):
-    def test_signup_new_user(self):
+@patch("social_text.auth.serializers.validate_email_with_api")
+class TestSignupView:
+    factory = RequestFactory()
+
+    def test_signup_new_user(self, validate_email_mock):
+        validate_email_mock.return_value = {"success": "user1@domain.com"}
         url = reverse("auth_signup")
-        response = self.client.post(
-            url, data={"email": "email@domain.com", "password": "password"}
+        request = self.factory.post(
+            url, data={"email": "user1@domain.com", "password": "password"}
         )
+        request.user = AnonymousUser()
 
-        assert response.status_code == HTTPStatus.OK
+        response = signup(request)
 
-        json_data = response.json()
-        assert "refresh" in json_data
-        assert "access" in json_data
+        assert response.status_code == HTTPStatus.OK.value
+
+        assert "refresh" in response.data
+        assert "access" in response.data
 
     @pytest.mark.usefixtures("db_user_1")
-    def test_signup_existing_user(self):
+    def test_signup_existing_user(self, validate_email_mock):
+        validate_email_mock.return_value = {"success": "user1@domain.com"}
         url = reverse("auth_signup")
-        response = self.client.post(
-            url, data={"email": "user1@domain.com", "password": "password3"}
+        request = self.factory.post(
+            url, data={"email": "user1@domain.com", "password": "password"}
         )
 
-        assert response.status_code == HTTPStatus.BAD_REQUEST
-        assert response.json() == {"error": "user_already_exists"}
+        request.user = AnonymousUser()
+
+        response = signup(request)
+
+        assert response.status_code == HTTPStatus.BAD_REQUEST.value
+        assert response.data == {"error": "user_already_exists"}
+
+    def test_email_validation_fails_with_did_you_mean(self, validate_email_mock):
+        validate_email_mock.return_value = {"did_you_mean": "user123@domain.com"}
+        url = reverse("auth_signup")
+        request = self.factory.post(
+            url, data={"email": "user1@domain.com", "password": "password"}
+        )
+
+        request.user = AnonymousUser()
+
+        response = signup(request)
+
+        assert response.status_code == HTTPStatus.BAD_REQUEST.value
+        assert response.data == {
+            "email": {
+                "did_you_mean": ErrorDetail(string="user123@domain.com", code="invalid")
+            }
+        }
