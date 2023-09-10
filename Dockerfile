@@ -14,12 +14,10 @@ ENV PATH="/etc/poetry/bin:${PATH}"
 
 WORKDIR /app
 
-COPY pyproject.toml poetry.lock /app/
+COPY . /app/
 
 RUN poetry config virtualenvs.create false && \
     poetry install --no-interaction --no-ansi
-
-COPY social_text /app/
 
 EXPOSE 8000
 

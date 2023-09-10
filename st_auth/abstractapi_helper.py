@@ -1,5 +1,6 @@
 import requests
 from django.conf import settings
+from requests import Response
 from rest_framework import serializers, status
 
 
@@ -41,3 +42,10 @@ def validate_email(email: str) -> dict:
             },
             status.HTTP_502_BAD_GATEWAY,
         )
+
+
+def get_geolocation(ip_address: str) -> Response:
+    return requests.get(
+        f"{settings.ABSTRACT_API_GEOLOCATION_URL}?api_key={settings.ABSTRACT_API_GEOLOCATION_KEY}&ip_address="
+        f"{ip_address}"
+    )

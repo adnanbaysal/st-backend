@@ -1,0 +1,82 @@
+from http import HTTPStatus
+
+import requests.exceptions
+from celery import shared_task
+from celery.utils.log import get_task_logger
+from django.conf import settings
+from django.contrib.auth.models import User
+
+from .abstractapi_helper import get_geolocation
+from .models import Geolocation
+
+logger = get_task_logger(__name__)
+
+
+RETRYABLE_STATUS_CODES = (
+    HTTPStatus.REQUEST_TIMEOUT.value,
+    HTTPStatus.TOO_MANY_REQUESTS.value,
+    HTTPStatus.BAD_GATEWAY.value,
+    HTTPStatus.SERVICE_UNAVAILABLE.value,
+    HTTPStatus.GATEWAY_TIMEOUT.value,
+)
+
+
+class RetryableHTTPStatusException(Exception):
+    pass
+
+
+@shared_task(
+    name="st_auth.tasks.create_user_geolocation",
+    bind=True,
+    acks_late=True,
+    max_retries=settings.CELERY_MAX_RETRIES,
+    default_retry_delay=settings.CELERY_DELAY_BETWEEN_RETRIES,
+    retry_backoff=settings.CELERY_RETRY_BACKOFF,
+)
+def create_user_geolocation(self, user_id: int, ip_address: str) -> str:
+    log_prefix = f"User_{user_id}@{ip_address}: "
+
+    user = User.objects.filter(id=user_id).first()
+    if not user:
+        message = (
+            log_prefix + "User cannot be found in DB! Skipping geolocation creation."
+        )
+        logger.warning(message)
+        return message
+
+    try:
+        geolocation_response = get_geolocation(ip_address)
+
+    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as exc:
+        logger.warning(
+            log_prefix
+            + f"Request to geolocation api raised retryable exception: {exc}!"
+        )
+        raise self.retry(exc=exc)
+
+    status_code = geolocation_response.status_code
+
+    if status_code == HTTPStatus.OK.value:
+        geolocation = geolocation_response.json()
+        user_geolocation = Geolocation.objects.create(
+            user=user, ip_address=ip_address, geolocation=geolocation
+        )
+        user_geolocation.save()
+
+        return log_prefix + "Successfully created geolocation information."
+
+    elif status_code in RETRYABLE_STATUS_CODES:
+        message = (
+            log_prefix
+            + f"Geolocation api returned a retryable status code - {status_code}."
+        )
+        logger.warning(message)
+        raise self.retry(exc=RetryableHTTPStatusException(message))
+
+    else:
+        message = (
+            log_prefix
+            + f"Geolocation api response status code {status_code} is not good to retry."
+        )
+        logger.warning(message)
+        return message

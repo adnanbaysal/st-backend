@@ -13,11 +13,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -46,7 +43,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     # project apps
-    "auth",
+    "st_auth",
 ]
 
 MIDDLEWARE = [
@@ -138,9 +135,13 @@ STATIC_ROOT = BASE_DIR / "static"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CELERY_BROKER_URL = os.environ.get(
-    "CELERY_BROKER_URL", "amqp://admin:mypass@rabbit:5672"
+    "CELERY_BROKER_URL", "amqp://admin:mypass@localhost:5672"
 )
-CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER_URL", "redis://redis:6379")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379")
+CELERY_ALWAYS_EAGER = os.environ.get("CELERY_ALWAYS_EAGER", "false") == "true"
+CELERY_MAX_RETRIES = int(os.environ.get("CELERY_MAX_RETRIES", 5))
+CELERY_DELAY_BETWEEN_RETRIES = int(os.environ.get("CELERY_DELAY_BETWEEN_RETRIES", 5))
+CELERY_RETRY_BACKOFF = os.environ.get("CELERY_RETRY_BACKOFF", "true") == "true"
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [],
@@ -161,3 +162,6 @@ SPECTACULAR_SETTINGS = {
 
 ABSTRACT_API_EMAIL_URL = os.getenv("ABSTRACT_API_EMAIL_URL", "")
 ABSTRACT_API_EMAIL_KEY = os.getenv("ABSTRACT_API_EMAIL_KEY", "")
+
+ABSTRACT_API_GEOLOCATION_URL = os.getenv("ABSTRACT_API_GEOLOCATION_URL", "")
+ABSTRACT_API_GEOLOCATION_KEY = os.getenv("ABSTRACT_API_GEOLOCATION_URL", "")

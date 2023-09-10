@@ -45,9 +45,9 @@ required services, first create a file named `.env` in the root directory of the
 
 ```
 ABSTRACT_API_EMAIL_URL=https://emailvalidation.abstractapi.com/v1/
-ABSTRACT_API_EMAIL_KEY=64ab8e748f644f31a6793503804e209d
-CELERY_BROKER_URL=amqp://admin:mypass@rabbit:5672
-CELERY_RESULT_BACKEND=redis://redis:6379
+ABSTRACT_API_EMAIL_KEY=REPLACE_YOUR_EMAIL_VALIDATION_API_KEY_HERE
+ABSTRACT_API_GEOLOCATION_URL=https://ipgeolocation.abstractapi.com/v1/
+ABSTRACT_API_GEOLOCATION_KEY=REPLACE_YOUR_GEOLOCATION_API_KEY_HERE
 DATABASE=postgres
 DJANGO_ROOT_URLCONF=social_text.urls
 DJANGO_SECRET_KEY=django-insecure-key
@@ -62,8 +62,8 @@ RABBITMQ_DEFAULT_USER=admin
 RABBITMQ_DEFAULT_PASS=mypass
 ```
 
-You can set the value of `DJANGO_SECRET_KEY` to any random string of characters. Then, run the following command to run
-all services including the API:
+Replace the secret values `DJANGO_SECRET_KEY, ABSTRACT_API_EMAIL_KEY, ABSTRACT_API_GEOLOCATION_KEY` to the secret values
+you have. Then, run the following command to run all services including the API:
 
 ```commandline
 docker-compose --profile runserver up -d --build
@@ -106,24 +106,25 @@ The project uses [pytest](https://docs.pytest.org/) to implement and run unit an
 
 To run all tests:
 
-1. Create a file named `.env_test` in the root directory of the repository with the following content:
+1. Create a file named `.env_test` in the root directory of the repository with the following content (replace the
+secrets with the correct values):
    ```
    ABSTRACT_API_EMAIL_URL=https://emailvalidation.abstractapi.com/v1/
-    ABSTRACT_API_EMAIL_KEY=64ab8e748f644f31a6793503804e209d
-    CELERY_BROKER_URL=amqp://admin:mypass@rabbit:5672
-    CELERY_RESULT_BACKEND=redis://redis:6379
-    DATABASE=postgres
-    DJANGO_ROOT_URLCONF=social_text.urls
-    DJANGO_SECRET_KEY=django-insecure-key
-    POSTGRES_DB=postgres_test
-    POSTGRES_HOST=localhost
-    POSTGRES_HOST_DOCKER=db-test
-    POSTGRES_PASSWORD=postgres
-    POSTGRES_PORT=5432
-    POSTGRES_PORT_TEST=6543
-    POSTGRES_USER=postgres
-    RABBITMQ_DEFAULT_USER=admin
-    RABBITMQ_DEFAULT_PASS=mypass
+   ABSTRACT_API_EMAIL_KEY=REPLACE_YOUR_EMAIL_VALIDATION_API_KEY_HERE
+   ABSTRACT_API_GEOLOCATION_URL=https://ipgeolocation.abstractapi.com/v1/
+   ABSTRACT_API_GEOLOCATION_KEY=REPLACE_YOUR_GEOLOCATION_API_KEY_HERE
+   DATABASE=postgres
+   DJANGO_ROOT_URLCONF=social_text.urls
+   DJANGO_SECRET_KEY=django-insecure-key
+   POSTGRES_DB=postgres_test
+   POSTGRES_HOST=localhost
+   POSTGRES_HOST_DOCKER=db-test
+   POSTGRES_PASSWORD=postgres
+   POSTGRES_PORT=5432
+   POSTGRES_PORT_TEST=6543
+   POSTGRES_USER=postgres
+   RABBITMQ_DEFAULT_USER=admin
+   RABBITMQ_DEFAULT_PASS=mypass
    ```
 2. Run the docker services with:
     ```commandline
@@ -155,18 +156,14 @@ cp .pre-push.hook .git/hooks/pre-push
 After that, unit tests will run whenever you try to push changes. The changes will be pushed only if the tests pass.
 Before pushing changes, make sure to run docker services so that tests requiring db connection can access it.
 
-NOTE: Currently, integration tests are not running in neither pre-push, nor in the Bitbucket pipeline. Reasons fo
-these are:
-1. `pre-push`: To reduce the number of `abstractapi` calls since they are limited for free plan
-2. Bitbucket pipelines: This needs a separate service structure in the file `bitbucket-pipelines.yml` since it's not
-obvious to run `docker-compose.yml` in Bitbucket pipelines. If time permits, pipeline file will be updated to run integration tests on
-push as an improvement.
-
-Therefore, currently it's developer's responsibility to run the integration tests locally.
+NOTE: Currently, integration tests are not running in the Bitbucket pipeline, because this needs a separate service
+structure in the file `bitbucket-pipelines.yml` since it's not obvious to run `docker-compose.yml` in Bitbucket
+pipelines. If time permits, pipeline file will be updated to run integration tests after push to Bitbucket as an
+improvement.
 
 ### Updating the OpenAPI schema ###
 Whenever there is a change in API specs, the OpenAPI schema can be updated with the following command in the
-`social_text` directory under the root repository directory:
+repository root:
 ```commandline
 ./manage.py spectacular --color --file schema.yml
 ```
