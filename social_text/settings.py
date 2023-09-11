@@ -28,6 +28,9 @@ DEBUG = True
 ALLOWED_HOSTS = ["*"]
 CSRF_TRUSTED_ORIGINS = ["http://localhost:1337"]
 
+if os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS"):
+    CSRF_TRUSTED_ORIGINS += os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS").split(",")
+
 
 # Application definition
 
