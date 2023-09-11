@@ -7,12 +7,31 @@ from django.test import RequestFactory
 from django.urls import reverse
 from rest_framework.exceptions import ErrorDetail
 
-from ..api import _get_ip_address_from_request, signup
+from ..api import _get_ip_address_from_request, login, signup
+from ..models import Geolocation
 
 
 @pytest.fixture
 def db_user_1():
-    return User.objects.create_user(username="user1@domain.com", password="password")
+    return User.objects.create_user(
+        username="user1@domain.com", password="password", id=1
+    )
+
+
+@pytest.fixture
+def db_geolocation_1(db_user_1):
+    return Geolocation.objects.create(
+        user_id=db_user_1.id,
+        ip_address="1.1.1.1",
+        geolocation={"dummy": "data"},
+        signed_up_on_holiday=False,
+    )
+
+
+@pytest.fixture
+def db_user_1_with_geolocation(db_user_1, db_geolocation_1):
+    db_user_1.geolocation = db_geolocation_1
+    return db_user_1
 
 
 @pytest.mark.django_db
@@ -104,3 +123,41 @@ class TestGetIpAddressFromRequest:
 
         result = _get_ip_address_from_request(request)
         assert result == "3.3.3.3"
+
+
+@pytest.mark.django_db
+class TestLoginView:
+    factory = RequestFactory()
+
+    @pytest.mark.usefixtures("db_user_1_with_geolocation")
+    def test_login_existing_user(self):
+        url = reverse("auth_login")
+        request = self.factory.post(
+            url, data={"email": "user1@domain.com", "password": "password"}
+        )
+        request.user = AnonymousUser()
+
+        response = login(request)
+
+        assert response.status_code == HTTPStatus.OK.value
+
+        assert response.data["user"] == {"id": 1, "username": "user1@domain.com"}
+        assert response.data["geolocation"] == {
+            "user_id": 1,
+            "ip_address": "1.1.1.1",
+            "geolocation": {"dummy": "data"},
+            "signed_up_on_holiday": False,
+        }
+        assert "access" in response.data["tokens"]
+        assert "refresh" in response.data["tokens"]
+
+    def test_login_user_does_not_exist(self):
+        url = reverse("auth_login")
+        request = self.factory.post(
+            url, data={"email": "user1@domain.com", "password": "password"}
+        )
+        request.user = AnonymousUser()
+
+        response = login(request)
+
+        assert response.status_code == HTTPStatus.BAD_REQUEST.value

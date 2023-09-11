@@ -4,6 +4,36 @@ info:
   version: 1.0.0
   description: SocialText is a text based social media app.
 paths:
+  /api/v1/auth/login:
+    post:
+      operationId: v1_auth_login_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Login'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Login'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+          description: ''
+        '400':
+          description: Bad request
+        '502':
+          description: Bad gateway
   /api/v1/auth/signup:
     post:
       operationId: v1_auth_signup_create
@@ -34,8 +64,80 @@ paths:
           description: Bad request
         '502':
           description: Bad gateway
+  /api/v1/auth/token/refresh/:
+    post:
+      operationId: v1_auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
 components:
   schemas:
+    Geolocation:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          readOnly: true
+        ip_address:
+          type: string
+        geolocation:
+          type: object
+          additionalProperties: {}
+        signed_up_on_holiday:
+          type: boolean
+      required:
+      - geolocation
+      - ip_address
+      - signed_up_on_holiday
+      - user_id
+    Login:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+      - email
+      - password
+    LoginResponse:
+      type: object
+      properties:
+        user:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        geolocation:
+          allOf:
+          - $ref: '#/components/schemas/Geolocation'
+          readOnly: true
+        tokens:
+          $ref: '#/components/schemas/TokenResponse'
+      required:
+      - geolocation
+      - tokens
+      - user
     SignUp:
       type: object
       properties:
@@ -54,16 +156,39 @@ components:
       required:
       - id
       - password
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          writeOnly: true
+      required:
+      - access
+      - refresh
     TokenResponse:
       type: object
       properties:
-        email:
+        access:
           type: string
-        token:
+        refresh:
           type: string
       required:
-      - email
-      - token
+      - access
+      - refresh
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+      required:
+      - id
+      - username
   securitySchemes:
     jwtAuth:
       type: http

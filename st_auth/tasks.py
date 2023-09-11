@@ -67,7 +67,7 @@ def create_user_geolocation(
         )
         user_geolocation.save()
 
-        update_is_signup_date_holiday.delay(user_geolocation.id, signup_date_utc)
+        update_is_signup_date_holiday.delay(user_geolocation.user_id, signup_date_utc)
 
         return log_prefix + "Successfully created geolocation information."
 
@@ -97,12 +97,12 @@ def create_user_geolocation(
     retry_backoff=settings.CELERY_RETRY_BACKOFF,
 )
 def update_is_signup_date_holiday(
-    self, user_geolocation_id: int, signup_date_utc
+    self, geolocation_user_id: int, signup_date_utc
 ) -> str:
     # TODO: Refactor this and above task to use common code (DRY)
-    log_prefix = f"Geolocation_{user_geolocation_id}: "
+    log_prefix = f"Geolocation_{geolocation_user_id}: "
 
-    user_geolocation = Geolocation.objects.filter(id=user_geolocation_id).first()
+    user_geolocation = Geolocation.objects.filter(id=geolocation_user_id).first()
     if not user_geolocation:
         message = (
             log_prefix

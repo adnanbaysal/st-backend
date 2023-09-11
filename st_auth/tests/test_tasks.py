@@ -57,7 +57,7 @@ class TestCreateUserGeolocation:
         )
         user_geolocation_mock.save.assert_called_once_with()
         update_is_signup_date_holiday_mock.delay.assert_called_once_with(
-            user_geolocation_mock.id, signup_date_utc
+            user_geolocation_mock.user_id, signup_date_utc
         )
         assert result == log_prefix + "Successfully created geolocation information."
 
@@ -209,13 +209,13 @@ class TestUpdateIsSignupDateHoliday:
     def test_task_completes_successfully(
         self, check_signup_date_is_holiday_mock, geolocation_class_mock
     ):
-        user_geolocation_id = 1
-        log_prefix = f"Geolocation_{user_geolocation_id}: "
+        geolocation_user_id = 1
+        log_prefix = f"Geolocation_{geolocation_user_id}: "
         signup_date_utc = "2023-09-01 12:30:00"
         country_code = "TR"
         timezone_name = "Europe/Istanbul"
 
-        user_geolocation_mock = Mock(spec_set=Geolocation, id=user_geolocation_id)
+        user_geolocation_mock = Mock(spec_set=Geolocation, user_id=geolocation_user_id)
         user_geolocation_mock.geolocation = {
             "country_code": country_code,
             "timezone": {"name": timezone_name},
@@ -230,11 +230,11 @@ class TestUpdateIsSignupDateHoliday:
         check_signup_date_is_holiday_mock.return_value = response_mock
 
         result = update_is_signup_date_holiday.apply(
-            args=(user_geolocation_id, signup_date_utc)
+            args=(geolocation_user_id, signup_date_utc)
         ).get()
 
         geolocation_class_mock.objects.filter.assert_called_once_with(
-            id=user_geolocation_id
+            id=geolocation_user_id
         )
         signup_date_user_country = convert_utc_to_user_time(
             signup_date_utc, timezone_name

@@ -9,7 +9,14 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from .jwt_helper import get_tokens_for_user
-from .serializers import SignUpSerializer, TokenResponseSerializer
+from .serializers import (
+    GeolocationSerializer,
+    LoginResponseSerializer,
+    LoginSerializer,
+    SignUpSerializer,
+    TokenResponseSerializer,
+    UserSerializer,
+)
 from .tasks import create_user_geolocation
 
 logger = getLogger(__name__)
@@ -56,3 +63,33 @@ def _get_ip_address_from_request(request: Request) -> str:
         return x_forwarded_for.split(",")[0]
 
     return request.META.get("REMOTE_ADDR", "")
+
+
+@extend_schema(
+    request=LoginSerializer,
+    responses={
+        status.HTTP_200_OK: LoginResponseSerializer,
+        status.HTTP_400_BAD_REQUEST: OpenApiResponse(description="Bad request"),
+        status.HTTP_502_BAD_GATEWAY: OpenApiResponse(description="Bad gateway"),
+    },
+)
+@api_view(["POST"])
+def login(request: Request):
+    if not User.objects.filter(username=request.data.get("email")).exists():
+        return Response(
+            {"error": "user_does_not_exists"}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    serializer = LoginSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    user = serializer.validated_data
+    tokens = get_tokens_for_user(user)
+
+    return Response(
+        {
+            "user": UserSerializer(user).data,
+            "geolocation": GeolocationSerializer(user.geolocation).data,
+            "tokens": tokens,
+        }
+    )
