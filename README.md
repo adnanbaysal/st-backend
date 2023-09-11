@@ -167,3 +167,7 @@ repository root:
 ```commandline
 ./manage.py spectacular --color --file schema.yml
 ```
+
+### Try the API ###
+The API is deployed to an AWS EC2 server. To try it out with swagger, go to
+http://ec2-51-20-41-108.eu-north-1.compute.amazonaws.com:1337/api/schema/swagger-ui/.
