@@ -1,3 +1,4 @@
+import datetime
 from logging import getLogger
 
 from django.contrib.auth.models import User
@@ -36,7 +37,9 @@ def signup(request: Request):
 
     user_ip = _get_ip_address_from_request(request)
     if user_ip:
-        create_user_geolocation.delay(user.id, user_ip)
+        now = datetime.datetime.utcnow()
+        signup_date_utc = now.strftime("%Y-%m-%d %H:%M:%S")
+        create_user_geolocation.delay(user.id, user_ip, signup_date_utc)
     else:
         logger.warning(
             f"Empty IP address for user {user.id}! Cannot create geolocation data."

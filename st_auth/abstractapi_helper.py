@@ -1,3 +1,5 @@
+import datetime
+
 import requests
 from django.conf import settings
 from requests import Response
@@ -49,3 +51,14 @@ def get_geolocation(ip_address: str) -> Response:
         f"{settings.ABSTRACT_API_GEOLOCATION_URL}?api_key={settings.ABSTRACT_API_GEOLOCATION_KEY}&ip_address="
         f"{ip_address}"
     )
+
+
+def check_signup_date_is_holiday(
+    country_code: str, date_: datetime.datetime
+) -> Response:
+    year, month, day = date_.year, date_.month, date_.day
+    url = (
+        f"{settings.ABSTRACT_API_HOLIDAY_URL}?api_key={settings.ABSTRACT_API_HOLIDAY_KEY}&country={country_code}"
+        f"&year={year}&month={month}&day={day}"
+    )
+    return requests.get(url)
