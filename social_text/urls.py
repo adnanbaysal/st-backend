@@ -8,7 +8,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # Project end-points
     path("api/v1/auth/", include("st_auth.urls")),
-    path("api/v1/post/", include("st_post.urls")),
+    path("api/v1/", include("st_post.urls")),
     # API documentation
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(

@@ -86,10 +86,14 @@ def login(request: Request):
     user = serializer.validated_data
     tokens = get_tokens_for_user(user)
 
+    geolocation = None
+    if hasattr(user, "geolocation") and user.geolocation:
+        geolocation = GeolocationSerializer(user.geolocation).data
+
     return Response(
         {
             "user": UserSerializer(user).data,
-            "geolocation": GeolocationSerializer(user.geolocation).data,
+            "geolocation": geolocation,
             "tokens": tokens,
         }
     )

@@ -161,3 +161,16 @@ class TestLoginView:
         response = login(request)
 
         assert response.status_code == HTTPStatus.BAD_REQUEST.value
+
+    @pytest.mark.usefixtures("db_user_1_with_geolocation")
+    def test_login_with_incorrect_credentials(self):
+        url = reverse("auth_login")
+        request = self.factory.post(
+            url, data={"email": "user1@domain.com", "password": "wrong_password"}
+        )
+        request.user = AnonymousUser()
+
+        response = login(request)
+
+        assert response.status_code == HTTPStatus.BAD_REQUEST.value
+        assert "Incorrect Credentials" in str(response.data["non_field_errors"])

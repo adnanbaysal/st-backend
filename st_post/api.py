@@ -21,6 +21,8 @@ class PostViewSet(ModelViewSet):
         if self.request.user != instance.user:
             raise ValidationError({"error": "cannot_delete_other_users_posts"})
 
+        instance.delete()
+
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
@@ -63,7 +65,9 @@ class PostLikeViewSet(ModelViewSet):
 
     def perform_destroy(self, instance):
         if self.request.user != instance.user:
-            raise ValidationError({"error": "cannot_delete_other_users_posts"})
+            raise ValidationError({"error": "cannot_delete_other_users_likes"})
+
+        instance.delete()
 
     def perform_update(self, serializer):
         raise ValidationError({"error": "like_update_not_allowed"})
