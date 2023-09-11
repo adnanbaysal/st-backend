@@ -34,6 +34,7 @@ services:
       sh -c "poetry run python manage.py makemigrations &&
              poetry run python manage.py migrate &&
              poetry run python manage.py collectstatic --no-input &&
+             poetry run python manage.py spectacular --color --file schema.yml &&
              poetry run gunicorn social_text.asgi:application -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000"
     volumes:
       - .:/app:z

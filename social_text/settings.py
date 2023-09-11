@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     # project apps
     "st_auth",
+    "st_post",
 ]
 
 MIDDLEWARE = [
