@@ -48,6 +48,8 @@ ABSTRACT_API_EMAIL_URL=https://emailvalidation.abstractapi.com/v1/
 ABSTRACT_API_EMAIL_KEY=REPLACE_YOUR_EMAIL_VALIDATION_API_KEY_HERE
 ABSTRACT_API_GEOLOCATION_URL=https://ipgeolocation.abstractapi.com/v1/
 ABSTRACT_API_GEOLOCATION_KEY=REPLACE_YOUR_GEOLOCATION_API_KEY_HERE
+ABSTRACT_API_HOLIDAY_URL=https://holidays.abstractapi.com/v1/
+ABSTRACT_API_HOLIDAY_KEY=REPLACE_YOUR_HOLIDAY_API_KEY_HERE
 DATABASE=postgres
 DJANGO_ROOT_URLCONF=social_text.urls
 DJANGO_SECRET_KEY=django-insecure-key
@@ -62,8 +64,9 @@ RABBITMQ_DEFAULT_USER=admin
 RABBITMQ_DEFAULT_PASS=mypass
 ```
 
-Replace the secret values `DJANGO_SECRET_KEY, ABSTRACT_API_EMAIL_KEY, ABSTRACT_API_GEOLOCATION_KEY` to the secret values
-you have. Then, run the following command to run all services including the API:
+Replace the secret values `DJANGO_SECRET_KEY, ABSTRACT_API_EMAIL_KEY, ABSTRACT_API_GEOLOCATION_KEY,` and
+`ABSTRACT_API_HOLIDAY_KEY` to the secret values you have. Then, run the following command to run all services including
+the API:
 
 ```commandline
 docker-compose --profile runserver up -d --build
@@ -84,8 +87,8 @@ Note that the DB will be wiped when the container is deleted in the above comman
 
 ### Django ###
 When running the API with `--profile runserver`, the port for the API is 1337. If the API is run with
-`./manage.py runserver`, the default port is 8000, but it can be changed with the `--port` option of `manage.py`.
-For the following, the port is assumed to be 1337. Under this assumption, the base url for Django backend (API) is
+`./manage.py runserver`, the default port is 8000, but it can be changed to 1337 with
+`manage.py runserver 0.0.0.0:1337`. For the following, the port is assumed to be 1337. Under this assumption, the base url for Django backend (API) is
 http://localhost:1337.
 
 * For Django Admin UI, go to http://localhost:1337/admin
@@ -113,6 +116,8 @@ secrets with the correct values):
    ABSTRACT_API_EMAIL_KEY=REPLACE_YOUR_EMAIL_VALIDATION_API_KEY_HERE
    ABSTRACT_API_GEOLOCATION_URL=https://ipgeolocation.abstractapi.com/v1/
    ABSTRACT_API_GEOLOCATION_KEY=REPLACE_YOUR_GEOLOCATION_API_KEY_HERE
+   ABSTRACT_API_HOLIDAY_URL=https://holidays.abstractapi.com/v1/
+   ABSTRACT_API_HOLIDAY_KEY=REPLACE_YOUR_HOLIDAY_API_KEY_HERE
    DATABASE=postgres
    DJANGO_ROOT_URLCONF=social_text.urls
    DJANGO_SECRET_KEY=django-insecure-key
@@ -132,9 +137,13 @@ secrets with the correct values):
     ```
 3. Then, run this command from repository root:
     ```commandline
-    poetry run pytest --cov
+    poetry run pytest --cov --cov-report term-missing
     ```
-   If the poetry environment is already activated, leading `poetry run can be omitted.
+   If the poetry environment is already activated, leading `poetry run` can be omitted. You can ignore the integration
+   tests and run only unit tests with the following command:
+   ```commandline
+   pytest --ignore tests --cov --cov-report term-missing
+   ```
 
 ## Contributing ##
 You need to install [`pre-commit`](https://pre-commit.com/) to install git pre-commit hooks that will run the linting
@@ -167,6 +176,8 @@ repository root:
 ```commandline
 ./manage.py spectacular --color --file schema.yml
 ```
+
+This command automatically runs in the docker-compose when starting the api service.
 
 ### Try the API ###
 The API is deployed to an AWS EC2 server. To try it out with swagger, go to
